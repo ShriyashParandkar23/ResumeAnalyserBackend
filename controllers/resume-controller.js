@@ -1,7 +1,10 @@
 const pdfParse = require('pdf-parse');
 const { OpenAI } = require('openai');
+require('dotenv').config();
+
+
 const client = new OpenAI({
-    apiKey: process.env['OPENAI_API_KEY'],
+    apiKey: process.env.OPENAI_API_KEY,
   });
 const resumeAnalyser = async (req,res) => {
     const file = req.file;
@@ -140,5 +143,7 @@ const jobMatchChecker = async (req, res) => {
     res.status(500).json({ error: 'Error processing the PDF file' });
   }
 };
+
+
 
 module.exports = {resumeAnalyser,jobMatchChecker};
