@@ -6,7 +6,6 @@ WORKDIR /app
 
 # Copy package files with ownership fix
 COPY --chown=pptruser:pptruser package*.json ./
-COPY --chown=pptruser:pptruser .env ./
 
 
 # Install dependencies
