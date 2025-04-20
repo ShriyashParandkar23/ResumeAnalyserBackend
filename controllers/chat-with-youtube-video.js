@@ -6,64 +6,59 @@ const openai = new OpenAI({
     baseURL: "https://generativelanguage.googleapis.com/v1beta/"
 });
 
+const chat_with_youtube_video = async (req, res) => {
+    const { userMsg, oldChats, videoUrl } = req.body;
+    const system_prompt = `
+You are an AI assistant helping users understand and analyze the content of a YouTube video.
+You only know the information about the youtube video and based on it you have to chat with user.
+Don't answer any question which is out of context of the particular youtube video. 
 
-const chat_with_youtube_video= async(req,res)=>{
-    const transcript = req.body.transcript; //string
-    const userquery = req.body.userMsg; //String
-    const previousConversation = req.body.oldChats; // []
+You may chat in Hinglish or English with user in formal and informal way. 
+Make the chat interesting and precise which will keep the user interested. 
 
-    // console.log(transcript,userquery,previousConversation)
+Context:
+- The YouTube video URL is: ${videoUrl} 
 
-
-
-    system_prompt = `You are an AI Assistant who analyze the ${transcript} of youtube video.
-     
-    Carefully analyse the user input ${userquery} and based on the ${transcript} 
-    prepare an answer for the user input. 
-    You also have the access to the ${previousConversation} where user has interacted with you 
-    Make sure you don't loose any context. 
-
-    Make sure to validate before you return the final output. 
-    Output should be in the JSON Object. 
-
-    Rules:
-    You only talk in English or Hinglish.
-    Example:  
-    Input: What is this video about?  
-    Output:  
-    {
-    "content": "This video is related to GenAI Cohort. In which Shriyash is teaching about Vector Embedding Techniques. Feel free to ask anything :)"
-    }  
-  `
-
+Instructions:
+- Answer the user's query using the transcript above.
+- Maintain continuity of the conversation using the previous messages.
+- Respond in JSON format like:
+  {
+    "content": "Your final answer here..."
+  }
+`;
+console.log(system_prompt)
     try {
+        // Convert previous chat messages to OpenAI message format
+        const chatHistory = oldChats.map((msg) => ({
+            role: msg.sender === "user" ? "user" : "assistant",
+            content: msg.text,
+        }));
+
         const response = await openai.chat.completions.create({
             model: "gemini-1.5-flash",
+            
+            max_tokens: 2000,
             messages: [
                 { role: "system", content: system_prompt },
-                {
-                    role: "user",
-                    content: userquery,
-                },
+                ...chatHistory,
+                { role: "user", content: userMsg },
             ],
         });
-        
+
         const content = response.choices[0].message.content;
-        // console.log('Content == ', content)
-        
+
         try {
             const parsed = JSON.parse(content);
-            res.status(200).json(parsed);  // 🔥 This ensures frontend gets a true JSON object
+            res.status(200).json(parsed);
         } catch (e) {
-            console.error("Failed to parse response content as JSON:", content);
-            res.status(200).send({ response: content }); // fallback
+            console.error("Failed to parse response as JSON:", content);
+            res.status(200).json({ content }); // fallback to string
         }
-        
     } catch (error) {
-        res.status(400).send(error)
+        console.error("OpenAI API error:", error);
+        res.status(500).json({ error: "Internal Server Error", details: error });
     }
+};
 
-
-}
-
-module.exports = {chat_with_youtube_video}
+module.exports = { chat_with_youtube_video };
