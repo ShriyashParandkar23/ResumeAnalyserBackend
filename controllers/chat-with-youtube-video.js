@@ -8,10 +8,11 @@ const openai = new OpenAI({
 
 const chat_with_youtube_video = async (req, res) => {
     const { userMsg, oldChats, videoUrl } = req.body;
+
     const system_prompt = `
-You are an AI assistant helping users understand and analyze the content of a YouTube video.
-You only know the information about the youtube video and based on it you have to chat with user.
-Don't answer any question which is out of context of the particular youtube video. 
+You are an AI assistant helping users understand and analyze the content of a ${videoUrl} YouTube video.
+You only know the information about the ${videoUrl} youtube video  and based on it you have to chat with user.
+Don't answer any question which is out of context of the particular ${videoUrl} youtube video. 
 
 You may chat in Hinglish or English with user in formal and informal way. 
 Make the chat interesting and precise which will keep the user interested. 
